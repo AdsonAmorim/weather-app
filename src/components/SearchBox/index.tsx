@@ -31,7 +31,7 @@ export function SearchBox({ getData }: SearchBoxProps) {
         textAlign="center"
         color="light.text"
         variant="unstyled"
-        width="80%"
+        width="85%"
         returnKeyType="search"
         placeholderTextColor="light.text"
         fontSize="md"

@@ -4,6 +4,9 @@ import { Image } from "expo-image";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { Box, FlatList, Stack, Text, View } from "native-base";
 
+// hooks
+import { useToast } from "@hooks/toast.hook";
+
 // services
 import {
   getForestWeatherByLocation,
@@ -21,7 +24,6 @@ import { WeatherData as WeatherDataResponse } from "@models/weather-data.model";
 // components
 import { SearchBox } from "@components/SearchBox";
 import { WeatherCard } from "@components/WeatherCard";
-import { Skeleton } from "@components/Skeleton";
 import { HomeSkeleton } from "./skeleton";
 
 interface WeatherData extends WeatherDataResponse {
@@ -31,6 +33,7 @@ interface WeatherData extends WeatherDataResponse {
 export function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [forecast, setForecast] = useState<WeatherData[]>([] as WeatherData[]);
+  const toast = useToast();
 
   async function getWeatherData() {
     setIsLoading(true);
@@ -44,16 +47,59 @@ export function Home() {
           coords: { latitude, longitude },
         } = location;
 
-        const forecast = await getForestWeatherByLocation({
-          latitude,
-          longitude,
+        try {
+          const forecast = await getForestWeatherByLocation({
+            latitude,
+            longitude,
+            interval: 5,
+          });
+
+          const forecastDataWithImageUrl = forecast.map((item) => {
+            const weatherImageUrl = getWeatherIcon({
+              icon: item.weather[0].icon,
+              size: "4x",
+            });
+
+            return {
+              ...item,
+              weatherImageUrl,
+            };
+          });
+          setForecast(forecastDataWithImageUrl);
+        } catch (error) {
+          toast.show(
+            <View
+              backgroundColor="error.500"
+              paddingX={5}
+              paddingY={2}
+              rounded={4}
+            >
+              <Text color="light.white">
+                Ocorreu um erro ao tentar buscar a previsão da sua cidade
+              </Text>
+            </View>
+          );
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }
+  }
+
+  async function getForecastByCityName(cityName: string) {
+    if (cityName.length) {
+      setIsLoading(true);
+
+      try {
+        const forecastData = await getForestWeatherByCityName({
+          cityName,
           interval: 5,
         });
 
-        const forecastDataWithImageUrl = forecast.map((item) => {
+        const forecastDataWithImageUrl = forecastData.map((item) => {
           const weatherImageUrl = getWeatherIcon({
             icon: item.weather[0].icon,
-            size: "4x",
+            size: "2x",
           });
 
           return {
@@ -63,42 +109,33 @@ export function Home() {
         });
 
         setForecast(forecastDataWithImageUrl);
+      } catch (error) {
+        setForecast(forecast);
+
+        toast.show(
+          <View
+            backgroundColor="error.500"
+            paddingX={5}
+            paddingY={2}
+            rounded={4}
+          >
+            <Text color="light.white">
+              Ocorreu um erro na busca dessa cidade. Por favor, verifique o nome
+              digitado
+            </Text>
+          </View>
+        );
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
-  }
-
-  async function getForecastByCityName(cityName: string) {
-    if (cityName.length) {
-      setIsLoading(true);
-
-      const forecastData = await getForestWeatherByCityName({
-        cityName,
-        interval: 5,
-      });
-
-      const forecastDataWithImageUrl = forecastData.map((item) => {
-        const weatherImageUrl = getWeatherIcon({
-          icon: item.weather[0].icon,
-          size: "2x",
-        });
-
-        return {
-          ...item,
-          weatherImageUrl,
-        };
-      });
-
-      setForecast(forecastDataWithImageUrl);
-      setIsLoading(false);
+    } else {
+      await getWeatherData();
     }
   }
 
   useEffect(() => {
     getWeatherData();
   }, []);
-
-  const isLoadingContent = isLoading && forecast.length === 0;
 
   return (
     <View
