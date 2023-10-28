@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Image } from "expo-image";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { FlatList, Text, View } from "native-base";
+import { Box, FlatList, Stack, Text, View } from "native-base";
 
 // services
 import {
@@ -13,13 +13,16 @@ import {
 // utils
 import { getCurrentLocation } from "@utils/get-current-location";
 import { verifyIfHasLocationPermission } from "@utils/verify-location-permission";
+import { getWeatherIcon } from "@utils/get-weather-icon";
 
 // models
 import { WeatherData as WeatherDataResponse } from "@models/weather-data.model";
-import { getWeatherIcon } from "@utils/get-weather-icon";
+
+// components
 import { SearchBox } from "@components/SearchBox";
 import { WeatherCard } from "@components/WeatherCard";
-import { Loading } from "@components/Loading";
+import { Skeleton } from "@components/Skeleton";
+import { HomeSkeleton } from "./skeleton";
 
 interface WeatherData extends WeatherDataResponse {
   weatherImageUrl: string;
@@ -95,6 +98,8 @@ export function Home() {
     getWeatherData();
   }, []);
 
+  const isLoadingContent = isLoading && forecast.length === 0;
+
   return (
     <View
       flex={1}
@@ -112,7 +117,7 @@ export function Home() {
         </View>
 
         {isLoading ? (
-          <Loading />
+          <HomeSkeleton />
         ) : (
           <>
             <View alignItems="center" flex={1} justifyContent="center">
@@ -145,6 +150,7 @@ export function Home() {
               <Text marginBottom={2} color="light.text">
                 Previsão para os próximos dias
               </Text>
+
               <FlatList
                 data={forecast}
                 showsHorizontalScrollIndicator={false}

@@ -41,13 +41,12 @@ export default function App() {
         style={{
           flex: 1,
           marginTop: `${Constants.statusBarHeight + 5}px`,
-          height: "100%",
         }}
       >
         <KeyboardAwareScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
-            height: Dimensions.get("window").height,
+            height: Dimensions.get("window").height + Constants.statusBarHeight,
           }}
           extraHeight={200}
           automaticallyAdjustContentInsets={false}
